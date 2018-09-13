@@ -92,15 +92,22 @@ def move_group_python_interface_tutorial():
 	box_pose.header.frame_id = robot.get_planning_frame()
 	#box_pose.pose.position.x = 0.5
 	#box_pose.pose.position.y = 0
-	box_pose.pose.position.z = 0.25
+	#box_pose.pose.position.z = 0.25
 	box_pose.pose.orientation.w = 1.0
 	box_name = "box"
-	print "============ Adding  the collision object"
+	print "============ Waiting for Rviz to add  the collision object"
+	rospy.sleep(3) # Must give it enough time to ass the object
 	scene.add_box(box_name, box_pose, size=(2, 0.7, 1.5))
-	rospy.sleep(3)
+	#scene.add_box(box_name, box_pose, size=(0.5, 0.5, 0.5))
+	collision_object = moveit_msgs.msg.CollisionObject()
+	
+	rospy.sleep(5)
+	target_pose = group.get_current_pose()
+	group.set_pose_target(target_pose)
+	plan2 = group.plan()
+	rospy.sleep(5)
 
-
-
+	'''
 	# Set a new pose for the arm to move
 	## ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 	target_pose.position.x = 0.729975241828
@@ -111,14 +118,31 @@ def move_group_python_interface_tutorial():
 	target_pose.orientation.y = 0.544095301678
 	target_pose.orientation.z = 0.833607238883
 	target_pose.orientation.w = 0.0796310773232
+	'''
+
+	# Set a new pose for the arm to move
+	## ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+	target_pose.pose.position.x = 0.729975241828
+	target_pose.pose.position.y = 0.334318680207
+	target_pose.pose.position.z = 1.01582207722
+	'''
+	target_pose.pose.orientation.x = -0.0521360287869
+	target_pose.pose.orientation.y = 0.544095301678
+	target_pose.pose.orientation.z = 0.833607238883
+	target_pose.pose.orientation.w = 0.0796310773232
+	'''
 
 	print "============ Waiting while RVIZ to display plan"
+	rospy.sleep(5)
 	group.set_pose_target(target_pose)
 	plan1 = group.plan()
+	rospy.sleep(10)
 
 	with warnings.catch_warnings(record=True) as w:
 		# Cause all warnings to always be triggered.
 		warnings.simplefilter("always")
+		print "============ verifying the warning message"
+		print w, "\n"
 		# Verify some things
 		if( "No execution attempted" in str(w) ):
 			error = True
@@ -137,6 +161,7 @@ def move_group_python_interface_tutorial():
 	remove_box = str(raw_input("would you like to remove the box:"))
 	if(remove_box == "y"):
 		scene.remove_world_object(box_name)
+		print "box removed from the scene"
 	else:
 		print "box not removed"
 
