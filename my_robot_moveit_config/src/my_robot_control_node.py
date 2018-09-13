@@ -43,6 +43,7 @@
 import sys
 import copy
 import rospy
+import warnings
 import moveit_commander
 import moveit_msgs.msg
 import geometry_msgs.msg
@@ -82,8 +83,26 @@ def move_group_python_interface_tutorial():
 	print group.get_current_pose()
 	print "============\n"
 
+	group.clear_pose_targets()
+
+
+	## Adding/Removing Objects and Attaching/Detaching Objects
+	## ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+	box_pose = geometry_msgs.msg.PoseStamped()
+	box_pose.header.frame_id = robot.get_planning_frame()
+	#box_pose.pose.position.x = 0.5
+	#box_pose.pose.position.y = 0
+	box_pose.pose.position.z = 0.25
+	box_pose.pose.orientation.w = 1.0
+	box_name = "box"
+	print "============ Adding  the collision object"
+	scene.add_box(box_name, box_pose, size=(2, 0.7, 1.5))
+	rospy.sleep(3)
+
+
 
 	# Set a new pose for the arm to move
+	## ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 	target_pose.position.x = 0.729975241828
 	target_pose.position.y = 0.334318680207
 	target_pose.position.z = 1.01582207722
@@ -93,13 +112,35 @@ def move_group_python_interface_tutorial():
 	target_pose.orientation.z = 0.833607238883
 	target_pose.orientation.w = 0.0796310773232
 
-	print "============ Waiting while RVIZ displays plan..."
+	print "============ Waiting while RVIZ to display plan"
 	group.set_pose_target(target_pose)
-	plan1 = group.plan()	
-	group.go(wait=True)
-	#rospy.sleep(5)
-	group.clear_pose_targets()
+	plan1 = group.plan()
 
+	with warnings.catch_warnings(record=True) as w:
+		# Cause all warnings to always be triggered.
+		warnings.simplefilter("always")
+		# Verify some things
+		if( "No execution attempted" in str(w) ):
+			error = True
+		else:
+			error = False
+
+	if (error == False):
+		## Move the robot in gazebo
+		## ^^^^^^^^^^^^^^^^^^^^^^^^
+		print "============ Waiting while Robot to reach it's destination"
+		group.go(wait=True)
+		rospy.sleep(5)
+	
+	#group.clear_pose_targets()
+
+	remove_box = str(raw_input("would you like to remove the box:"))
+	if(remove_box == "y"):
+		scene.remove_world_object(box_name)
+	else:
+		print "box not removed"
+
+	## When finished shut down moveit_commander.
 	moveit_commander.roscpp_shutdown()
 	print "============ STOPPING"
 

@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<launch>
+	<node name="my_robot_control_node" pkg="my_robot_moveit_config" type="my_robot_control_node.py"/>
+</launch>
